@@ -496,6 +496,8 @@ class Zappa:
 
         # Need to manually add setuptools
         pkg_list.append("setuptools")
+        pkg_list.remove("zappa==0.54.3")
+        print(pkg_list)
         command = [
             "pip",
             "install",
@@ -503,6 +505,20 @@ class Zappa:
             "--target",
             venv_site_packages_dir,
         ] + pkg_list
+
+        zappa_proc = subprocess.Popen([
+            "pip",
+            "install",
+            "--quiet",
+            # "-e",
+            # "/c/Users/Philippe/Work/Zappa/"
+            "zappa@git+https://github.com/ppartarr/zappa.git@build/jenkinsfile"
+        ], stdout=subprocess.PIPE)
+        zappa_proc.communicate()
+        zappa_exit_code = zappa_proc.returncode
+        if zappa_exit_code:
+            raise EnvironmentError("VCS zappa install failed")
+
 
         # This is the recommended method for installing packages if you don't
         # to depend on `setuptools`
@@ -2440,6 +2456,8 @@ class Zappa:
             auth_type = authorizer.get("type", "TOKEN").upper()
             if auth_type in ["TOKEN", "REQUEST"]:
                 auth_type = "CUSTOM"
+            else:
+                raise Exception("Unknown request type specified in settings. Should be either REQUEST or TOKEN")
 
         # build a fresh template
         self.cf_template = troposphere.Template()
